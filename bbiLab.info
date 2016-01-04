@@ -1,0 +1,16 @@
+name = "BBI Laboratorio"
+description = "Modulo para gestión del laboratorio BBI"
+package = "BBI"
+
+configure = admin/config/services/web_server_config
+
+files[] = bbiLab.module
+dependencies[] = codeserver_client
+
+
+; Information added by Drupal.org packaging script on 2015-08-21
+version = "7.x-2.0"
+core = "7.x"
+project = "BBI"
+datestamp = "1412378934"
+
