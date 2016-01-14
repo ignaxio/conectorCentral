@@ -13,29 +13,29 @@
  */
 class BbiVial {
 
-    public static function update($datosVial) {
-        if ($vial = node_load(bbiLab_getIdNodeByTitle($datosVial['titulo']))) {
-            if (isset($datosVial['estado']))
-                $vial->field_vial_estado['und'][0]['value'] = $datosVial['estado'];
-            if (isset($datosVial['ayntamiento']))
-                $vial->field_ayuntamiento['und'][0]['value'] = $datosVial['ayntamiento'];
-            if (isset($datosVial['veterinario']))
-                $vial->field_veterinario['und'][0]['value'] = $datosVial['veterinario'];
-            if (isset($datosVial['tipoVial']))
-                $vial->field_vial_tipo_de_vial['und'][0]['value'] = $datosVial['tipoVial'];
-            if (isset($datosVial['localizacion']))
-                $vial->field_vial_localizacion['und'][0]['value'] = $datosVial['localizacion'];
-            if (isset($datosVial['pistoleteado']))
-                $vial->field_vial_pistoleteado['und'][0]['value'] = $datosVial['pistoleteado'];
-            if (isset($datosVial['fechaVialLleno']))
-                $vial->field_vial_fecha_de_extracci_n['und'][0] = bbiLab_getFecha($datosVial['fechaVialLleno']);
-            if (isset($datosVial['fechaInforme']))
-                $vial->field_vial_fecha_fin_analisis['und'][0]['value'] = $datosVial['fechaInforme'];
-            //Antes de guardar el vial vamos a actualizar la caja
-            if (BbiCaja::update($datosVial)) {
-                node_save($vial);
-                return TRUE;
-            }
+    public static function update($paquete) {
+        if ($vial = node_load(bbiLab_getIdNodeByTitle($paquete->getTituloVial()))) {
+            
+            $ewrapperVial = entity_metadata_wrapper('node', $vial); 
+            
+            if ($paquete->getEstado())
+                $ewrapperVial->field_vial_estado->set((int)$paquete->getEstado());
+            if ($paquete->getAyuntamiento())
+                $ewrapperVial->field_ayuntamiento->set((int)bbiLab_getUserByName($paquete->getAyuntamiento()));
+            if ($paquete->getVeterinario())
+                $ewrapperVial->field_veterinario->set((int)bbiLab_getUserByName($paquete->getVeterinario()));
+            if ($paquete->getTipoVial())
+                $ewrapperVial->field_vial_tipo_de_vial->set((int)$paquete->getTipoVial());
+            if ($paquete->getLocalizacion())
+                $ewrapperVial->field_vial_localizacion->set((int)$paquete->getLocalizacion()); 
+            if ($paquete->getFechaVialLleno())
+                $ewrapperVial->field_vial_fecha_de_extracci_n->set($paquete->getFechaVialLleno());
+            if ($paquete->getFechaInforme())
+                $ewrapperVial->field_vial_fecha_fin_analisis->set($paquete->getFechaInforme());
+            
+            
+            $ewrapperVial->save();
+            return TRUE;
         }
         return FALSE;
     }
@@ -48,11 +48,8 @@ class BbiVial {
                 . " = $idVial"
                 )->fetchCol();
 
-        if ($chapaId[0])
+        if (isset($chapaId[0]))
             return $chapaId[0];
-
-        // metemos el error en el watch log de drupal si no hay chapa
-        watchdog_exception('SQL', 'No existe la chapa del vial ' . $idVial . '. ' . $e);
         return FALSE;
     }
 

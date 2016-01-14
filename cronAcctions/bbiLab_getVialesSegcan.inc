@@ -62,7 +62,7 @@ function bbiLab_getVialesSegcan_setEstadoEnSegeco($vial) {
             bbiLab_getFecha($vial['fechaInforme']) : NULL;
     try {
         $remote = new CodeServer($conector);
-        $remote->config->request_timeout = 2;
+        $remote->config->request_timeout = 10;
         //Aquí llamamos a función remota, si devuleve true se marca el vial sincronizado.
         $result = $remote->conectorSegeco_setEstadoVial($vial);
     } catch (Exception $e) {
@@ -103,7 +103,7 @@ function bbiLab_getVialesSegcan_setEstadoEnChapa($reslutado, $nid) {
     //Si el estado es 3, finalizado ok lo tenemos que marcar en la chapa    
     if((int)$reslutado === 3) {
         //Vamos a meterle a la chapa que tenga asociado este vial el finalizado ok
-        if($chapaId = bbiLab_getChapaFromVial((int)$nid)) {
+        if($chapaId = BbiVial::getChapa((int)$nid)) {
             $chapa = node_load($chapaId);
             $chapa->field_chapa_finalizado_ok['und'][0]['value'] = TRUE;
             node_save($chapa);

@@ -6,6 +6,7 @@ require_once 'bbiLab_bulkOper.inc';
 require_once 'bbiLab_cron.inc';
 require_once 'bbiLab_conector.inc';
 
+require_once 'Entity/BbiPaquete.php';
 require_once 'Entity/BbiBuffer.php';
 require_once 'Entity/BbiConector.php';
 require_once 'Entity/BbiVial.php';

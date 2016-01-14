@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Operaciones disponibles
  *  1 - Insertar vial en tienda
@@ -12,6 +13,7 @@
  *  50 - eliminar viales vacios de una caja
  * 100 - insertar inti buffer en tienda
  */
+
 /**
  * Description of BBIBuffer
  *
@@ -26,11 +28,11 @@ class BbiBuffer {
         foreach ($serversNames as $uid => $serverName) {
             $queue = DrupalQueue::get('bufferSalida' . $serverName);
             $remote = new CodeServer($serverName);
-            $remote->config->request_timeout = 2;
-            $time = microtime();
+            $remote->config->request_timeout = 10;
+            $time = microtime(TRUE);
             $max = (int) BbiConector::getMaxTimeExecution(bbiLab_getUserById($uid));
 
-            while (($item = $remote->get_item_from_buffer()) && ((microtime() - $time) < $max)) {
+            while (($item = $remote->get_item_from_buffer()) && ((microtime(TRUE) - $time) < $max)) {
                 if (BbiBuffer::process_item($item, $serverName)) {
                     $remote->remove_item_from_buffer($item->item_id);
                 } else {
@@ -43,59 +45,75 @@ class BbiBuffer {
     public static function process_item($item, $serverName) {
         $resultado = FALSE;
         $data = $item->data;
-        foreach ($data->operaciones as $operacion) {
-            $resultado = FALSE;
-            switch ($operacion) {
-                case 1://Insertar vial tienda
+        $paquete = $data->paquete;
 
-                    break;
-                case 2://Insertar chapa en tienda
-                    $resultado = BbiChapa::insert($data->data);
-                    break;
-                case 11://Update vial en tienda
-                    $resultado = BbiVial::update($data->data);
+        //Si no existe el vial se meterá en la cola de errores.
+        if ($vial = node_load(bbiLab_getIdNodeByTitle($paquete->getTituloVial()))) {
+            //Vamos a ver antes de guardar los datos si el vial que viene tiene fecha de extracción, 
+            //si no la tiene es que en segcan no devería existir y hay que crearla nueva, 
+            //si tiene fecha de extracción se envia para actualizar datos.
+            if (isset($vial->field_vial_fecha_de_extracci_n['und'][0]['value'])) {
+                $operacionParaSegcan = 2; //Lo actualizamos
+            } else {
+                $operacionParaSegcan = 1; //Lo creamos
+            }
+            foreach ($data->operaciones as $operacion) {
+                switch ($operacion) {
+                    case 1://Crear????? nada de momento
 
-                    break;
-                case 12://Update chapa en tienda
+                        break;
+                    case 2://actualizar
+                        //Antes de guardar el vial vamos a actualizar la caja si viene de un segeco.
+                        //Miramos le fecha de vial lleno para saberlo.
+                        if ($paquete->getFechaVialLleno()) {
+                            BbiCaja::update($paquete);
+                        }
+                        $resultado = BbiVial::update($paquete);
 
-                    break;
-
-
-                case 100://Insert into buffer
-                    //Si hay que enviar los datos los metemos en el buffer de salida
-                    $resultado = BbiBuffer::insert_item_into_buffer($item, $serverName);
-
-
-                    break;
-                default:
-                    if (!$resultado)
-                        return FALSE;
+                        //Si viene el titulo de la chapa la creamos o la editamos si ya está en tienda
+                        if ($paquete->getTituloChapa()) {
+                            //Mirar si existe la chapa en el vial y se actualiza los datos
+                            if ($idChapa = BbiVial::getChapa(bbiLab_getIdNodeByTitle($paquete->getTituloVial()))) {
+                                $resultado = BbiChapa::update($paquete, $idChapa);
+                            } else {
+                                //Si no existe se crea la chapa
+                                $resultado = BbiChapa::insert($paquete);
+                            }
+                        } elseif (!$paquete->getFechaVialLleno() && $serverName != 'conectorSegcan') {
+                            //No tiene fecha extraccion... y viene de algún segeco
+                            // hay que eliminar la chapa, si la hubiese
+                            //Esto quiere decir que se ha editado la solicitud y se ha cambiado de vial.
+                        }
+                        //Si viene de segcan habrá que mirar de que ayntamiento es y mandarlo para allí
+                        //Si viene de algún ayntamiento hay que mandarlo a segcan
+                        $tipoSegeco = BbiConector::getTipoDeSegeco($serverName);
+                        if ($tipoSegeco == 'Segcan') {
+                            if ($ayto = $paquete->getAyuntamiento()) {
+                                //Operaciones para los segecos, 
+                                $data->operaciones = array(2, 4); //Update vial y chapa si la hubiese
+                                BbiBuffer::insert_item_into_buffer($data, $ayto);
+                                return TRUE;
+                            } else {
+                                return FALSE;
+                            }
+                        } else {
+                            //Hay que mandar si es actualizar el vial o es insertar un vial nuevo.
+                            //Si viene de algún ayto lo mandamos a segcan, cuando haya mas segcan ya veremos
+                            $data->operaciones = array($operacionParaSegcan);
+                            BbiBuffer::insert_item_into_buffer($data, 'segcan');
+                            return TRUE;
+                        }
+                        break;
+                }
             }
         }
+
         return $resultado;
     }
 
-    public static function insert_item_into_buffer($item, $serverName) {
-        //Si viene de segcan habrá que mirar de que ayntamiento es y mandarlo para allí
-        //Si viene de algún ayntamiento hay que mandarlo a segcan
-        $tipoSegeco = BbiConector::getTipoDeSegeco($serverName);
-        if ($tipoSegeco == 'Segcan') {
-            //Vamos a ver de que ayto es
-            $data = $item->data;
-            $array = $data->data;
-            if ($ayto = $array['ayuntamiento']) {
-                $queue = DrupalQueue::get('bufferSalidaconector' . $ayto);
-                $queue->createItem($item);
-                return TRUE;
-            } else {
-                return FALSE;
-            }
-        } else {
-            //Si viene de algún ayto lo mandamos a segcan, cuando haya mas segcan ya veremos
-            $queue = DrupalQueue::get('bufferSalidaconectorSegcan');
-            $queue->createItem($item);
-            return TRUE;
-        }
+    public static function insert_item_into_buffer($datos, $ayto) {
+        $queue = DrupalQueue::get('bufferSalidaconector' . $ayto);
+        $queue->createItem($datos);
     }
 
     public static function get_item_from_buffer($queue) {
@@ -117,10 +135,12 @@ class BbiBuffer {
         foreach ($serversNames as $uid => $serverName) {
             $queue = DrupalQueue::get('bufferSalida' . $serverName);
             $remote = new CodeServer($serverName);
-            $remote->config->request_timeout = 2; //Tiempo de espera de lectura en segundos, especificado por un float (p.ej. 10.5).Por omisión se utiliza el valor del ajuste default_socket_timeout de php.ini.
-            $time = microtime();
+            $remote->config->request_timeout = 20; //Tiempo de espera de lectura en segundos, especificado por un float (p.ej. 10.5).Por omisión se utiliza el valor del ajuste default_socket_timeout de php.ini.
+            $time = microtime(TRUE);
+            watchdog('pruebatiempo', 'inicio total ' . $time);
             $max = (int) BbiConector::getMaxTimeExecution(bbiLab_getUserById($uid));
-            while (($item = BbiBuffer::get_item_from_buffer($queue)) && ((microtime() - $time) < $max)) {
+            while (($item = BbiBuffer::get_item_from_buffer($queue)) && ((microtime(TRUE) - $time) < $max)) {
+            watchdog('pruebatiempo', 'inicio una prueba ' .  (microtime(TRUE) - $time));
                 if ($item) {
                     if ($remote->write_element_from_buffer($item)) {
                         BbiBuffer::remove_item_from_buffer($queue, $item); //Lo ha metido, lo borramos del buffer de salida

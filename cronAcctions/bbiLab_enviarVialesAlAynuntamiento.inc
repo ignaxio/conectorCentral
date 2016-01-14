@@ -8,7 +8,7 @@ function bbiLab_setVialToSegeco() {
     foreach ($aytos as $ayto) {
         $queue = DrupalQueue::get('setVialTo' . $ayto);
         $remote = new CodeServer('conector' . $ayto);
-        $remote->config->request_timeout = 2;//Tiempo de espera de lectura en segundos, especificado por un float (p.ej. 10.5).Por omisión se utiliza el valor del ajuste default_socket_timeout de php.ini.
+        $remote->config->request_timeout = 10;//Tiempo de espera de lectura en segundos, especificado por un float (p.ej. 10.5).Por omisión se utiliza el valor del ajuste default_socket_timeout de php.ini.
         $time = microtime();
         $max = (int)BbiConector::getMaxTimeExecuteAQueue($ayto); 
         while (($item = $queue->claimItem(7400)) && ((microtime() - $time) < $max)) {

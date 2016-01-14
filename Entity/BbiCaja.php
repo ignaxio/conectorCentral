@@ -13,21 +13,24 @@
  */
 class BbiCaja {
 
-    public static function update($datos) {
-        if ($idCaja = BbiCaja::getIdCaja($datos['titulo'])) {
+    public static function update($paquete) {
+        if ($idCaja = BbiCaja::getIdCaja($paquete->getTituloVial())) {
             if ($caja = node_load($idCaja)) {
+                $ewrapperCaja = entity_metadata_wrapper('node', $caja); 
                 //Le metemos la fecha, si no hay ninguan todavía...
                 if (!isset($caja->field_caja_fec_primer_vial_lleno['und'][0]['value'])) {
-                    $caja->field_caja_fec_primer_vial_lleno['und'][0] = bbiLab_getFecha($datos['fechaVialLleno']);
+                    $ewrapperCaja->field_caja_fec_primer_vial_lleno->set($paquete->getFechaVialLleno());
                 }
 
                 //Le sumamos 1 a viales llenos si no tienen ya fecha de extracción, 
                 //quiere decir que ya se metió en la tienda antes.
-                $vial = node_load(bbiLab_getIdNodeByTitle($datos['titulo']));
-                if (!isset($vial->field_vial_fecha_de_extracci_n['und'][0])) {
-                    $caja->field_caja_viales_llenos['und'][0]['value'] += 1;
+                $vial = node_load(bbiLab_getIdNodeByTitle($paquete->getTituloVial()));
+                
+                if (!isset($vial->field_vial_fecha_de_extracci_n['und'][0]['value'])) {
+                    $vialesEnCaja = (int)$ewrapperCaja->field_caja_viales_llenos->value() + 1;
+                    $ewrapperCaja->field_caja_viales_llenos->set((int)$vialesEnCaja);
                 }
-                node_save($caja);
+                $ewrapperCaja->save();
                 return TRUE;
             }
         }
@@ -56,13 +59,13 @@ class BbiCaja {
         $vialesVacios = array();
 
         //Todos los viales de la caja
-        if (!$viales = $this->getTodosLosViales($idCaja))
+        if (!$viales = BbiCaja::getTodosLosViales($idCaja))
             return false;
 
         // vamos a buscar los viales llenos y los vacios
         if ($estado != 'todos') {
             $vialesLlenos = BbiVial::getVialesLlenos($viales);
-            $vialesVacios = $this->quitarVialesLLenosDelArray($viales, $vialesLlenos);
+            $vialesVacios = BbiCaja::quitarVialesLLenosDelArray($viales, $vialesLlenos);
         }
 
         //Si quieren todos los viales de la caja se los doy
@@ -74,7 +77,7 @@ class BbiCaja {
             return $vialesVacios;
     }
 
-    private function quitarVialesLLenosDelArray($viales, $vialesLlenos) {
+    public static function quitarVialesLLenosDelArray($viales, $vialesLlenos) {
         $vialesVacios = $viales;
         //Vamos a quitar los viales que ya están llenos para dejar los vacios.
         foreach ($vialesLlenos as $idVialLleno => $tituloVialLleno) {
@@ -87,7 +90,7 @@ class BbiCaja {
         return $vialesVacios;
     }
 
-    private function getTodosLosViales($idCaja) {
+    public static function getTodosLosViales($idCaja) {
         $viales = array();
 
         //Cojo todos los viales de la caja

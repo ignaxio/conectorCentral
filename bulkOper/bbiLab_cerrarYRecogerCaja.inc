@@ -31,7 +31,7 @@ function bbiLab_cerrarYRecogerCaja(&$entity, $context = array()) {
     //Modificamos los campos de la caja
     bbiLab_cerrarYRecogerCaja_modificarCamposDeLaCaja($entity, $trackingNumber);
     //Vamos a buscar los viales que hay en esta caja
-    $viales = bbiLab_getVialesDeUnaCaja($entity->nid);
+    $viales = BbiCaja::getViales($entity->nid);
     
     //Modificamos los campos del vial
     foreach ($viales as $idVial => $titleVial) {
@@ -41,7 +41,7 @@ function bbiLab_cerrarYRecogerCaja(&$entity, $context = array()) {
     } 
     
     //Ahora hay que eliminar los viales vacios de esta caja que estan en su ayto
-    $vialesVacios = bbiLab_getVialesDeUnaCaja($entity->nid, 'vacios');   
+    $vialesVacios = BbiCaja::getViales($entity->nid, 'vacios');   
     bbiLab_cerrarYRecogerCaja_eliminarVialDeCajaCerrada($vialesVacios, 
             $ayuntamiento);
     
@@ -93,7 +93,7 @@ function bbiLab_cerrarYRecogerCaja_eliminarVialDeCajaCerrada($vialesVacios,
     
     //Hacemos la conexión y lo enviamos
     $remote = new CodeServer($conector);
-    $remote->config->request_timeout = 2;
+    $remote->config->request_timeout = 10;
     $respuesta = $remote->conectorSegeco_eliminarVialesVaciosDeUnaCaja(
             $vialesVacios);   
             

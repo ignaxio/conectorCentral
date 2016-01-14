@@ -6,6 +6,7 @@ require_once 'bulkOper/bbiLab_cerrarYRecogerCaja.inc';
 require_once 'bulkOper/bbiLab_retornarCajasDelSegecoToTienda.inc';
 require_once 'bulkOper/bbiLab_retornarCajasUsadasDelLaboratorio.inc';
 require_once 'bulkOper/bbiLab_pedirChapasAFabrica.inc';
+require_once 'bulkOper/bbiLab_darDeBajaUnVial.inc';
 
 
 
@@ -59,6 +60,12 @@ function bbiLab_action_info() {
             'label' => t('Pedir chapas a fábrica'),
             'configurable' => FALSE,
             'pass rows' => TRUE
-        )
+        ),
+        'bbiLab_darDeBajaUnVial' => array(
+            'type' => 'entity',
+            'label' => t('Dar de baja un vial'),
+            'configurable' => FALSE,
+            'pass rows' => TRUE
+        ),
     );
 }

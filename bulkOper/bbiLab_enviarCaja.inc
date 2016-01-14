@@ -6,8 +6,8 @@
  */
 function bbiLab_enviarCaja_form($settings, &$form_state) {
     //Voy a coger los ayuntamientos que tenemos en la tienda
-    $ayuntamientos = bbiLab_getAyuntamientos();
-    $veterinarios = bbiLab_getVeterinarios();
+    $ayuntamientos = BbiConector::getAyuntamientos();
+    $veterinarios = BbiConector::getVeterinarios();
     //Añado la opción ninguno a los veterinarios por si la caja es de heces 
     //y va ha el usuario ayto
     $veterinarios[0] = 'Ninguno, heces';
@@ -67,16 +67,18 @@ function bbiLab_enviarCaja(&$entity, $context = array()) {
     $trackingEnvio      = $context['trackingEnvio'];
      
     
-    //Modificamos los campos la la caja 
+    //Modificamos los campos de la caja 
     bbiLab_enviarCaja_modificarCamposDeCaja($entity, $idVeterinario, 
             $idAyuntamiento, $trackingEnvio); 
     //Vamos a buscar los viales que hay en esta caja
-    $viales = bbiLab_getVialesDeUnaCaja($entity->nid);
+    $viales = BbiCaja::getViales($entity->nid);
     //Ahora modificamos los campos de los viales de la tienda
     foreach ($viales as $idVial => $titleVial) {
-        bbiLab_enviarCaja_modificarCamposDeVial($idVial, $idVeterinario, 
+        $vial = bbiLab_enviarCaja_modificarCamposDeVial($idVial, $idVeterinario, 
                 $idAyuntamiento); 
+        bbiLab_enviarCaja_llenarPaquete($vial); 
     }      
+    
     //Ya esta, con esto se ha hecho todo para enviar las cajas, solo esperar 
     //que se ejecute el cron    
     
@@ -90,7 +92,22 @@ function bbiLab_enviarCaja(&$entity, $context = array()) {
   drupal_set_message($message);
 }
 
-
+function bbiLab_enviarCaja_llenarPaquete($vial)  {
+    $paquete = new BbiPaquete();
+    $paquete->setTituloVial($vial->title);
+    $paquete->setTipoVial($vial->field_vial_tipo_de_vial['und'][0]['value']);
+    $paquete->setAyuntamiento(bbiLab_getUserById($vial->field_ayuntamiento['und'][0]['target_id']));
+    $paquete->setVeterinario($vial->field_veterinario['und'][0]['target_id'] ? bbiLab_getUserById($vial->field_veterinario['und'][0]['target_id']) : false);
+    
+    
+    //Creo un objeto y le meto el array en el atributo vial, 
+    //así cuando llege al segeco sabra que es un vial
+    $datos = new stdClass();
+    $datos->paquete = $paquete;
+    $datos->operaciones = array(1);
+    //Creamos el item para que el cron lo lance el solo
+    BbiBuffer::insert_item_into_buffer($datos, $paquete->getAyuntamiento());
+}
 
 /**
  * Funcion que modifica los campos del vial cunado se envia a un veterinario.
@@ -115,22 +132,7 @@ function bbiLab_enviarCaja_modificarCamposDeVial($idVial, $idVeterinario,
     
     node_save($vial); 
     
-    //Ahora hay que mandar el vial a la cola para que el cron haga su trabajo.
-    //Para ello creamos el array simple.
-    $v['nid'] = $idVial;
-    $v['titulo'] = $vial->title;
-    $v['tipoDeVial'] = $vial->field_vial_tipo_de_vial['und'][0]['value'];    
-    $v['idAyuntamiento'] = $idAyuntamiento;            
-    $v['veterinario'] = $idVeterinario ? bbiLab_getUserById($idVeterinario) : false;
-    
-    //Creo un objeto y le meto el array en el atributo vial, 
-    //así cuando llege al segeco sabra que es un vial
-    $datos = new stdClass();
-    $datos->vial = $v;
-    $datos->operaciones = array(21);
-    //Creamos el item para que el cron lo lance el solo
-    $queue = DrupalQueue::get('bufferSalidaconector' . bbiLab_getUserById($idAyuntamiento));
-    $queue->createItem($datos);
+    return $vial;
 }
 
 /**

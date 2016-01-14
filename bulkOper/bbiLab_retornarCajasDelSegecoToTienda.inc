@@ -16,7 +16,7 @@ function bbiLab_retornarCajasDelSegecoToTienda($context) {
     node_save($caja);
     
     //Ahora sus viales
-    $viales = bbiLab_getTodosLosVialesDeUnaCaja($context->nid);
+    $viales = BbiCaja::getViales($context->nid);
     foreach ($viales as $idVial => $tituloVial) {
         $vial = node_load($idVial);
         $vial->field_ayuntamiento                           = array(); 

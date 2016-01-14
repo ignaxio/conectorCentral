@@ -8,7 +8,7 @@ function bbiLab_getVialesLlenosDelSegeco() {
     foreach ($serversNames as $uid => $serverName) {
         $queue = DrupalQueue::get('BBIVialLlenoDe' . bbiLab_getUserById($uid));
         $remote = new CodeServer($serverName);
-        $remote->config->request_timeout = 2;
+        $remote->config->request_timeout = 10;
         $time = microtime();
         $max = (int)BbiConector::getMaxTimeExecuteAQueue(bbiLab_getUserById($uid)); 
         while (($item = $remote->conectorSegeco_getVialesLlenos()) && ((microtime() - $time) < $max)) {            
@@ -120,7 +120,7 @@ function bbiLab_getVialesLlenosDelSegeco_setvialToSegcan($vial) {
             false;
         
     $remote = new CodeServer('conectorSegcan');
-    $remote->config->request_timeout = 2;
+    $remote->config->request_timeout = 10;
     $respuesta = $remote->conectorSegcan_setMuestra($v);
     drupal_set_message($respuesta, 'status');
     return $respuesta;
@@ -176,7 +176,7 @@ function bbiLab_getVialesLlenosDelSegeco_setFechaPrimerVialLlenoDeLaCaja(
 function bbiLab_getVialesLlenosDelSegeco_setVialSincronizadoEnAyuntamiento($item_id, $ayto) {
     //Hacemos la conexión y lo enviamos
     $remote = new CodeServer('conector' . $ayto);
-    $remote->config->request_timeout = 2;
+    $remote->config->request_timeout = 10;
     $result = $remote->conectorSegeco_eliminarItemDeLaQueue($item_id);
     return $result;
     
@@ -191,7 +191,7 @@ function bbiLab_getVialesLlenosDelSegeco_setVialSincronizadoEnAyuntamiento($item
     
     //ahora ya no necesitamos el switch..
     $remote = new CodeServer($conector);
-    $remote->config->request_timeout = 2;
+    $remote->config->request_timeout = 10;
     $result = $remote->conectorSegeco_marcarVialSincronizado($vial->title);
     
     if ($result) return true;
@@ -205,7 +205,7 @@ function bbiLab_getVialesLlenosDelSegeco_getVialesLlenosDeAyntamiento() {
     //Vamos a recorrer los ayuntamientos
     foreach ($serversNames as $uid => $serverName) {
         $remote = new CodeServer($serverName);
-        $remote->config->request_timeout = 2;
+        $remote->config->request_timeout = 10;
         if ($viales = $remote->conectorSegeco_getVialesLlenos()) {
             $arrayDeArrayDeViales[bbiLab_getUserById($uid)] = $viales;
         }        

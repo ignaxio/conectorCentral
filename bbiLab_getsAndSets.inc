@@ -11,21 +11,21 @@ function bbiLab_sendEmail($titulo, $mensaje) {
  * @param int $idVial
  * @return int
  */
-function bbiLab_getChapaFromVial($idVial) {
-    $chapaId = db_query(
-            "SELECT ch.nid "
-            . "FROM node ch, field_data_field_chapa_vial vial "
-            . "WHERE ch.nid = vial.entity_id AND vial.field_chapa_vial_target_id"
-            . " = $idVial"
-            )->fetchCol();
-
-    if ($chapaId[0])
-        return $chapaId[0];
-
-    // metemos el error en el watch log de drupal si no hay chapa
-    watchdog_exception('SQL', 'No existe la chapa del vial ' . $idVial . '. ' . $e);
-    return FALSE;
-}
+//function bbiLab_getChapaFromVial($idVial) {
+//    $chapaId = db_query(
+//            "SELECT ch.nid "
+//            . "FROM node ch, field_data_field_chapa_vial vial "
+//            . "WHERE ch.nid = vial.entity_id AND vial.field_chapa_vial_target_id"
+//            . " = $idVial"
+//            )->fetchCol();
+//
+//    if ($chapaId[0])
+//        return $chapaId[0];
+//
+//    // metemos el error en el watch log de drupal si no hay chapa
+//    watchdog_exception('SQL', 'No existe la chapa del vial ' . $idVial . '. ' . $e);
+//    return FALSE;
+//}
 
 /**
  * funcion que devuelve los viales que hay en una caja 
@@ -36,171 +36,171 @@ function bbiLab_getChapaFromVial($idVial) {
  * @param string $estado
  * @return array
  */
-function bbiLab_getVialesDeUnaCaja($idCaja, $estado = 'todos') {
-//dpm(get_defined_vars());
-    $viales = array();
-    $vialesLlenos = array();
-    $vialesVacios = array();
-
-//Todos los viales de la caja
-    if (!$viales = bbiLab_getTodosLosVialesDeUnaCaja($idCaja))
-        return false;
-
-// vamos a buscar los viales llenos y los vacios
-    if ($estado != 'todos') {
-        $vialesLlenos = bbiLab_getVialesLlenos($viales);
-        $vialesVacios = bbiLab_quitarVialesLLenosDelArray($viales, $vialesLlenos);
-    }
-
-//Si quieren todos los viales de la caja se los doy
-    if ($estado == 'todos')
-        return $viales;
-    elseif ($estado == 'llenos')
-        return $vialesLlenos;
-    elseif ($estado == 'vacios')
-        return $vialesVacios;
-}
-
-function bbiLab_quitarVialesLLenosDelArray($viales, $vialesLlenos) {
-    $vialesVacios = $viales;
-//Vamos a quitar los viales que ya están llenos para dejar los vacios.
-    foreach ($vialesLlenos as $idVialLleno => $tituloVialLleno) {
-        foreach ($vialesVacios as $idVial => $tituloVialVacio) {
-            if ($idVial == $idVialLleno) {
-                unset($vialesVacios[$idVial]);
-            }
-        }
-    }
-    return $vialesVacios;
-}
-
-function bbiLab_getVialesLlenos($viales) {
-    $vialesLlenos = array();
-//Si quieren solo los viales llenos
-    foreach ($viales as $idVial => $title) {
-//Vamos a buscar los viales que tienen fecha de extracción
-        $query = db_select('node', 'n');
-        $query->join('field_data_field_vial_fecha_de_extracci_n', 'fvfe', 'n.nid = fvfe.entity_id');
-        $query->join('field_data_field_vial_tipo_de_vial', 'tipoVial', 'n.nid = tipoVial.entity_id');
-        $query->join('field_data_field_ayuntamiento', 'ayun', 'n.nid = ayun.entity_id');
-        $query->leftJoin('field_data_field_veterinario', 'veter', 'n.nid = veter.entity_id');
-        $result = $query
-                ->fields('n', array('nid'))
-                ->fields('tipoVial', array('field_vial_tipo_de_vial_value'))
-                ->fields('ayun', array('field_ayuntamiento_target_id'))
-                ->fields('veter', array('field_veterinario_target_id'))
-                ->condition('nid', $idVial, '=')
-                ->execute();
-        if ($result) {
-            while ($record = $result->fetchAssoc()) {
-                $vialesLlenos[$record['nid']]['titulo'] = $title;
-                $vialesLlenos[$record['nid']]['tipoDeVial'] = $record['field_vial_tipo_de_vial_value'];
-                $vialesLlenos[$record['nid']]['ayuntamiento'] = bbiLab_getUserById($record['field_ayuntamiento_target_id']);
-                $vialesLlenos[$record['nid']]['veterinario'] = bbiLab_getUserById($record['field_veterinario_target_id']);
-            }
-        } else {
-//no tiene viales llenos
-            return FALSE;
-        }
-    }
-    return $vialesLlenos;
-}
-
-function bbiLab_getTodosLosVialesDeUnaCaja($idCaja) {
-    $viales = array();
-
-//Cojo todos los viales de la caja
-    $query = db_select('node', 'n');
-    $query->join('field_data_field_caja_fisica', 'fcf', 'n.nid = fcf.field_caja_fisica_target_id');
-    $query->join('field_data_field_vial_caja', 'fvc', 'fcf.entity_id = fvc.field_vial_caja_revision_id');
-    $result = $query
-            ->fields('fvc', array('entity_id'))//Vial
-            ->condition('nid', $idCaja, '=')
-            ->execute();
-    if ($result) {
-        while ($record = $result->fetchAssoc()) {
-            $viales[$record['entity_id']] = bbiLab_getTitleById(
-                    $record['entity_id']);
-        }
-    } else {
-//Si no tiene viales 
-        return FALSE;
-    }
-    return $viales;
-}
+//function bbiLab_getVialesDeUnaCaja($idCaja, $estado = 'todos') {
+////dpm(get_defined_vars());
+//    $viales = array();
+//    $vialesLlenos = array();
+//    $vialesVacios = array();
+//
+////Todos los viales de la caja
+//    if (!$viales = bbiLab_getTodosLosVialesDeUnaCaja($idCaja))
+//        return false;
+//
+//// vamos a buscar los viales llenos y los vacios
+//    if ($estado != 'todos') {
+//        $vialesLlenos = bbiLab_getVialesLlenos($viales);
+//        $vialesVacios = bbiLab_quitarVialesLLenosDelArray($viales, $vialesLlenos);
+//    }
+//
+////Si quieren todos los viales de la caja se los doy
+//    if ($estado == 'todos')
+//        return $viales;
+//    elseif ($estado == 'llenos')
+//        return $vialesLlenos;
+//    elseif ($estado == 'vacios')
+//        return $vialesVacios;
+//}
+//
+//function bbiLab_quitarVialesLLenosDelArray($viales, $vialesLlenos) {
+//    $vialesVacios = $viales;
+////Vamos a quitar los viales que ya están llenos para dejar los vacios.
+//    foreach ($vialesLlenos as $idVialLleno => $tituloVialLleno) {
+//        foreach ($vialesVacios as $idVial => $tituloVialVacio) {
+//            if ($idVial == $idVialLleno) {
+//                unset($vialesVacios[$idVial]);
+//            }
+//        }
+//    }
+//    return $vialesVacios;
+//}
+//
+//function bbiLab_getVialesLlenos($viales) {
+//    $vialesLlenos = array();
+////Si quieren solo los viales llenos
+//    foreach ($viales as $idVial => $title) {
+////Vamos a buscar los viales que tienen fecha de extracción
+//        $query = db_select('node', 'n');
+//        $query->join('field_data_field_vial_fecha_de_extracci_n', 'fvfe', 'n.nid = fvfe.entity_id');
+//        $query->join('field_data_field_vial_tipo_de_vial', 'tipoVial', 'n.nid = tipoVial.entity_id');
+//        $query->join('field_data_field_ayuntamiento', 'ayun', 'n.nid = ayun.entity_id');
+//        $query->leftJoin('field_data_field_veterinario', 'veter', 'n.nid = veter.entity_id');
+//        $result = $query
+//                ->fields('n', array('nid'))
+//                ->fields('tipoVial', array('field_vial_tipo_de_vial_value'))
+//                ->fields('ayun', array('field_ayuntamiento_target_id'))
+//                ->fields('veter', array('field_veterinario_target_id'))
+//                ->condition('nid', $idVial, '=')
+//                ->execute();
+//        if ($result) {
+//            while ($record = $result->fetchAssoc()) {
+//                $vialesLlenos[$record['nid']]['titulo'] = $title;
+//                $vialesLlenos[$record['nid']]['tipoDeVial'] = $record['field_vial_tipo_de_vial_value'];
+//                $vialesLlenos[$record['nid']]['ayuntamiento'] = bbiLab_getUserById($record['field_ayuntamiento_target_id']);
+//                $vialesLlenos[$record['nid']]['veterinario'] = bbiLab_getUserById($record['field_veterinario_target_id']);
+//            }
+//        } else {
+////no tiene viales llenos
+//            return FALSE;
+//        }
+//    }
+//    return $vialesLlenos;
+//}
+//
+//function bbiLab_getTodosLosVialesDeUnaCaja($idCaja) {
+//    $viales = array();
+//
+////Cojo todos los viales de la caja
+//    $query = db_select('node', 'n');
+//    $query->join('field_data_field_caja_fisica', 'fcf', 'n.nid = fcf.field_caja_fisica_target_id');
+//    $query->join('field_data_field_vial_caja', 'fvc', 'fcf.entity_id = fvc.field_vial_caja_revision_id');
+//    $result = $query
+//            ->fields('fvc', array('entity_id'))//Vial
+//            ->condition('nid', $idCaja, '=')
+//            ->execute();
+//    if ($result) {
+//        while ($record = $result->fetchAssoc()) {
+//            $viales[$record['entity_id']] = bbiLab_getTitleById(
+//                    $record['entity_id']);
+//        }
+//    } else {
+////Si no tiene viales 
+//        return FALSE;
+//    }
+//    return $viales;
+//}
 
 /**
  * Función que devuelve todos los veterinarios de la tienda en un 
  * array [uid] = nombre
  */
-function bbiLab_getVeterinarios() {
-//Vamos a buscar los uid con rol 5 que son los veterinarios
-    $idVeterinarios = array();
-    $veterinarios = array();
-    $idRolVeterinario = 5;
-    $query = db_select('users_roles', 'u');
-    $result = $query
-            ->fields('u', array('uid'))
-            ->condition('rid', $idRolVeterinario, '=')
-            ->execute();
-    while ($record = $result->fetchAssoc()) {
-        $idVeterinarios[$record['uid']] = '';
-    }
-//Ahora ya tenemos los id vamos a buscar los nombres    
-    foreach ($idVeterinarios as $idVeterinario => $valor) {
-        $query = db_select('users', 'u');
-        $result = $query
-                ->fields('u', array('name'))
-                ->condition('uid', $idVeterinario, '=')
-                ->execute();
-        while ($record = $result->fetchAssoc()) {
-            $veterinarios[$idVeterinario] = $record['name'];
-        }
-    }
-    return $veterinarios;
-}
-
-/**
- * Función que devuelve todos los ayuntamientos de la tienda en un 
- * array [uid] = nombre
- */
-function bbiLab_getAyuntamientos() {
-//Vamos a buscar los uid con rol 4 que son los ayuntamientos
-    $idAyuntamientos = array();
-    $ayuntamientos = array();
-    $idRolAyntamiento = 4;
-    $query = db_select('users_roles', 'u');
-    $result = $query
-            ->fields('u', array('uid'))
-            ->condition('rid', $idRolAyntamiento, '=')
-            ->execute();
-    while ($record = $result->fetchAssoc()) {
-        $idAyuntamientos[$record['uid']] = '';
-    }
-//Ahora ya tenemos los id vamos a buscar los nombres    
-    foreach ($idAyuntamientos as $idAyuntamiento => $valor) {
-        $query = db_select('users', 'u');
-        $result = $query
-                ->fields('u', array('name'))
-                ->condition('uid', $idAyuntamiento, '=')
-                ->execute();
-        while ($record = $result->fetchAssoc()) {
-            $ayuntamientos[$idAyuntamiento] = $record['name'];
-        }
-    }
-    return $ayuntamientos;
-}
+//function bbiLab_getVeterinarios() {
+////Vamos a buscar los uid con rol 5 que son los veterinarios
+//    $idVeterinarios = array();
+//    $veterinarios = array();
+//    $idRolVeterinario = 5;
+//    $query = db_select('users_roles', 'u');
+//    $result = $query
+//            ->fields('u', array('uid'))
+//            ->condition('rid', $idRolVeterinario, '=')
+//            ->execute();
+//    while ($record = $result->fetchAssoc()) {
+//        $idVeterinarios[$record['uid']] = '';
+//    }
+////Ahora ya tenemos los id vamos a buscar los nombres    
+//    foreach ($idVeterinarios as $idVeterinario => $valor) {
+//        $query = db_select('users', 'u');
+//        $result = $query
+//                ->fields('u', array('name'))
+//                ->condition('uid', $idVeterinario, '=')
+//                ->execute();
+//        while ($record = $result->fetchAssoc()) {
+//            $veterinarios[$idVeterinario] = $record['name'];
+//        }
+//    }
+//    return $veterinarios;
+////}
+//
+///**
+// * Función que devuelve todos los ayuntamientos de la tienda en un 
+// * array [uid] = nombre
+// */
+//function bbiLab_getAyuntamientos() {
+////Vamos a buscar los uid con rol 4 que son los ayuntamientos
+//    $idAyuntamientos = array();
+//    $ayuntamientos = array();
+//    $idRolAyntamiento = 4;
+//    $query = db_select('users_roles', 'u');
+//    $result = $query
+//            ->fields('u', array('uid'))
+//            ->condition('rid', $idRolAyntamiento, '=')
+//            ->execute();
+//    while ($record = $result->fetchAssoc()) {
+//        $idAyuntamientos[$record['uid']] = '';
+//    }
+////Ahora ya tenemos los id vamos a buscar los nombres    
+//    foreach ($idAyuntamientos as $idAyuntamiento => $valor) {
+//        $query = db_select('users', 'u');
+//        $result = $query
+//                ->fields('u', array('name'))
+//                ->condition('uid', $idAyuntamiento, '=')
+//                ->execute();
+//        while ($record = $result->fetchAssoc()) {
+//            $ayuntamientos[$idAyuntamiento] = $record['name'];
+//        }
+//    }
+//    return $ayuntamientos;
+//}
 
 /**
  * Función que mira si el vial está en alguna caja
  */
-function bbiLab_vialTieneCaja($idVial) {
-    $vial = node_load($idVial);
-    if ($vial->field_vial_pistoleteado['und'][0]['value'] == 1) {
-        return true;
-    }
-    return false;
-}
+//function bbiLab_vialTieneCaja($idVial) {
+//    $vial = node_load($idVial);
+//    if ($vial->field_vial_pistoleteado['und'][0]['value'] == 1) {
+//        return true;
+//    }
+//    return false;
+//}
 
 /**
  * función que devuelve el id del usuario pasandole el nombre
@@ -449,7 +449,7 @@ function fincionesBBI_setChapa($titulo, $fecha_envio, $fecha_peticion, $ayuntami
 
 function fincionesBBI_getChapas($ayuntamiento) {
     $remote = new CodeServer('conectorXativa');
-    $remote->config->request_timeout = 2;
+    $remote->config->request_timeout = 10;
 //Aquí llamamos a función remota, si devuleve true se marca 
 //el vial sincronizado.
     $chapas = $remote->conectorSegeco_getAllChapas();

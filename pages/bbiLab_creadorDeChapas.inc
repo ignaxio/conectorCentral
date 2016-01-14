@@ -37,7 +37,7 @@ function bbiLab_creadorDeChapas_form_validate($form, &$form_state) {
     $cantidad                   = $form_state['values']['cantidad'];        
     
     if (!is_numeric($cantidad)){
-        form_set_error('cantidad', 'La cantidad tiene que ser un n´mero');
+        form_set_error('cantidad', 'La cantidad tiene que ser un número');
     }
 }
 
@@ -65,7 +65,7 @@ function bbiLab_creadorDeChapas_crearChapas($cantidad, $tipo, $prefijo,
         $contador, $ayuntamiento, $digitoControl = NULL, 
         $fechaPeticion = NULL, $fechaEnvio = NULL, $finalizadoOK = NULL, 
         $idVial = NULL) {
-    //Se crean tantas chapapas como cantidad haya marcado.
+    //Se crean tantas chapas como cantidad haya marcado.
     for ($i = 0; $i < (int)$cantidad; $i++) {
         //Hay que aumentar el contador y que tenga 5 dígitos
         $contador = bbiLab_creadorDeChapas_transformTo5Digitos((int)$contador + 1); 

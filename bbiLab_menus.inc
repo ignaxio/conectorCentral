@@ -84,7 +84,32 @@ function bbiLab_menu() {
 
 //Funcion para imprimir variables 
 function bbiLab_pruebas() {
-    print_r(BbiCaja::getIdCaja('ca-aaa8848'));
+    
+    $remote = new CodeServer('conectorLebrija');
+    $remote->config->request_timeout = 10;
+    //Aquí llamamos a función remota, si devuelve false hay que mandarlo otra vez a la cola
+    $usuario = $remote->prueba_usuario();  
+    print_r($usuario);
+    
+//    $f = date_create($fechaU);
+//    print_r($f);
+//    $fecha = date_format($fechaU, "Y-m-d H:i:s");
+//    print_r($fecha);
+//    $fecha = new DateTime();
+//    $fecha->setTimestamp($fechaU);
+//    $c = node_load(1137);
+//    print_r($fecha);
+    
+    
+//    $ewrapper = entity_metadata_wrapper('node', $c); 
+//    $ewrapper->field_caja_fec_primer_vial_lleno->set($fechaU);
+//    $ewrapper->save();
+//    $c->field_caja_fec_primer_vial_lleno['und'][0]['value'] = bbiLab_getFecha($fecha);
+    
+    
+    
+    
+//    print_r(BbiCaja::getIdCaja('ca-aaa8848'));
     
     
     
@@ -93,7 +118,7 @@ function bbiLab_pruebas() {
 //    $serversNames = BbiConector::getServerNameActivos();
 //    foreach ($serversNames as $uid => $serverName) {
 //        $remote = new CodeServer($serverName);
-//        $remote->config->request_timeout = 2; //Tiempo de espera de lectura en segundos, especificado por un float (p.ej. 10.5).Por omisión se utiliza el valor del ajuste default_socket_timeout de php.ini.
+//        $remote->config->request_timeout = 10; //Tiempo de espera de lectura en segundos, especificado por un float (p.ej. 10.5).Por omisión se utiliza el valor del ajuste default_socket_timeout de php.ini.
 //        $time = microtime();
 //        $max = (int) BbiConector::getMaxTimeExecution(bbiLab_getUserById($uid));
 //
@@ -119,7 +144,7 @@ function bbiLab_pruebas() {
 //        print_r($v);
 //        
 //        $remote = new CodeServer('conectorLebrija');
-//        $remote->config->request_timeout = 2;
+//        $remote->config->request_timeout = 10;
 //        //Aquí llamamos a función remota, si devuelve false hay que mandarlo otra vez a la cola
 //        $remote->conectorSegeco_setVeterinario($v);  
 //    }

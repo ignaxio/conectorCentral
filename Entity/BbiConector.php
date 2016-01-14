@@ -53,18 +53,18 @@ class BbiConector {
         }
         return $tiposDeSegeco;
     }
-    
+
     /**
      * Devuleve el tipo del conector pasandole en conector name
      * @return array()
      */
-    public static function getTipoDeSegeco($conectorName1) {
-        
+    public static function getTipoDeSegeco($conectorName) {
+
         $config = variable_get('codeserver_configs');
         foreach ($config as $conectorName2 => $server) {
-            if($conectorName2 == $conectorName1) {
+            if ($conectorName2 == $conectorName) {
                 return $server['tipoSegeco'];
-            } 
+            }
         }
         return FALSE;
     }
@@ -81,9 +81,63 @@ class BbiConector {
         foreach ($configs as $conectorName => $variablesDelConector) {
             //Si el el ayto es el mismo devolvemos el tiempo máximo de ejecución en milisegundos
             if ($variablesDelConector['aytoName'] == $ayto) {
-                return $variablesDelConector['max_time_queue'] . 000;
+                return $variablesDelConector['max_time_queue'];
             }
         }
+    }
+
+    public static function getAyuntamientos() {
+        //Vamos a buscar los uid con rol 4 que son los ayuntamientos
+        $idAyuntamientos = array();
+        $ayuntamientos = array();
+        $idRolAyntamiento = 4;
+        $query = db_select('users_roles', 'u');
+        $result = $query
+                ->fields('u', array('uid'))
+                ->condition('rid', $idRolAyntamiento, '=')
+                ->execute();
+        while ($record = $result->fetchAssoc()) {
+            $idAyuntamientos[$record['uid']] = '';
+        }
+        //Ahora ya tenemos los id vamos a buscar los nombres    
+        foreach ($idAyuntamientos as $idAyuntamiento => $valor) {
+            $query = db_select('users', 'u');
+            $result = $query
+                    ->fields('u', array('name'))
+                    ->condition('uid', $idAyuntamiento, '=')
+                    ->execute();
+            while ($record = $result->fetchAssoc()) {
+                $ayuntamientos[$idAyuntamiento] = $record['name'];
+            }
+        }
+        return $ayuntamientos;
+    }
+
+    public static function getVeterinarios() {
+        //Vamos a buscar los uid con rol 5 que son los veterinarios
+        $idVeterinarios = array();
+        $veterinarios = array();
+        $idRolVeterinario = 5;
+        $query = db_select('users_roles', 'u');
+        $result = $query
+                ->fields('u', array('uid'))
+                ->condition('rid', $idRolVeterinario, '=')
+                ->execute();
+        while ($record = $result->fetchAssoc()) {
+            $idVeterinarios[$record['uid']] = '';
+        }
+        //Ahora ya tenemos los id vamos a buscar los nombres    
+        foreach ($idVeterinarios as $idVeterinario => $valor) {
+            $query = db_select('users', 'u');
+            $result = $query
+                    ->fields('u', array('name'))
+                    ->condition('uid', $idVeterinario, '=')
+                    ->execute();
+            while ($record = $result->fetchAssoc()) {
+                $veterinarios[$idVeterinario] = $record['name'];
+            }
+        }
+        return $veterinarios;
     }
 
 }
