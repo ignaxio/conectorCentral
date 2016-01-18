@@ -29,6 +29,14 @@ class BbiCaja {
                 if (!isset($vial->field_vial_fecha_de_extracci_n['und'][0]['value'])) {
                     $vialesEnCaja = (int)$ewrapperCaja->field_caja_viales_llenos->value() + 1;
                     $ewrapperCaja->field_caja_viales_llenos->set((int)$vialesEnCaja);
+                    
+                    //Ahora que sabemos que este vial es la primera vez que entra, se puede mandar un email al jefe...
+                    $mensaje = 'Ha entrado el vial ' . $paquete->getTituloVial() . ' proveniente del ayuntamiento de '
+                            . $paquete->getAyuntamiento() . ' del veterinario ' . $paquete->getVeterinario();
+                    simple_mail_queue('info@adnperros.es', 'dlopezbbi@gmail.com', 'ADN Perros ' .
+                            'Nuevo vial de ' . $paquete->getAyuntamiento(), $mensaje);                    
+                    simple_mail_queue('info@adnperros.es', 'j.ant.mateos@gmail.com', 'ADN Perros ' .
+                            'Nuevo vial de ' . $paquete->getAyuntamiento(), $mensaje);                    
                 }
                 $ewrapperCaja->save();
                 return TRUE;

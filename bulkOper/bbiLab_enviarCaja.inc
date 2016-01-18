@@ -124,8 +124,8 @@ function bbiLab_enviarCaja_modificarCamposDeVial($idVial, $idVeterinario,
     //Lo marcamos que está en veterinario
     $vial->field_vial_localizacion['und'][0]['value'] = 3;
     //si el idVeterinario es 0 no tiene veterinario
-    if ((int)$idVeterinario) {
-        $vial->field_veterinario['und'][0]['target_id'] = $idVeterinario;  
+    if ($idVeterinario) {
+        $vial->field_veterinario['und'][0]['target_id'] = (int)$idVeterinario;  
     }else {
         $vial->field_veterinario = array(); 
     }

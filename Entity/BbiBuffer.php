@@ -79,10 +79,38 @@ class BbiBuffer {
                                 //Si no existe se crea la chapa
                                 $resultado = BbiChapa::insert($paquete);
                             }
-                        } elseif (!$paquete->getFechaVialLleno() && $serverName != 'conectorSegcan') {
-                            //No tiene fecha extraccion... y viene de algún segeco
-                            // hay que eliminar la chapa, si la hubiese
-                            //Esto quiere decir que se ha editado la solicitud y se ha cambiado de vial.
+                        } 
+                        //No tiene fecha extraccion... y viene de algún segeco
+                        // hay que eliminar la chapa, si la hubiese
+                        //Esto quiere decir que se ha editado la solicitud y se ha cambiado de vial.
+                        if (!$paquete->getFechaVialLleno() && $serverName != 'conectorSegcan') {
+                            
+                            if($vial = node_load(bbiLab_getIdNodeByTitle($paquete->getTituloVial()))) {
+                                if($idChapa = BbiVial::getChapa($vial->nid)) {
+                                    watchdog('prueba vial editado', 'chapa que se va a eliminar ' . $idChapa);
+                                    //Si teien chapa la eliminamos
+                                    node_delete($idChapa);
+                                    
+                                    watchdog('prueba vial editado', 'chapa eliminada ' . $idChapa);
+                                    //ahora limpiamos el vial
+                                    $vial->field_vial_fecha_de_extracci_n['und'] = NULL;                                    
+                                    $vial->field_vial_estado['und'] = NULL;
+                                    $vial->field_vial_localizacion['und'][0]['value'] = 3;
+                                    node_save($vial);
+                                    
+                                    watchdog('prueba vial editado', 'vial se ha quitado la fecha de extracción ' . $vial->title);
+                                    //Le restamos 1 a la caja.
+                                    $caja = node_load(BbiCaja::getIdCaja($paquete->getTituloVial()));
+                                    watchdog('prueba vial editado', 'se le va a restar uno a la caja ' . $caja->field_caja_viales_llenos['und'][0]['value']);
+                                    
+                                    
+                                    $caja->field_caja_viales_llenos['und'][0]['value'] -= 1;
+                                    node_save($caja);
+                                    
+                                    watchdog('prueba vial editado', 'se le ha restado una a la caja ' . $caja->field_caja_viales_llenos['und'][0]['value']);
+                                    
+                                }
+                            }
                         }
                         //Si viene de segcan habrá que mirar de que ayntamiento es y mandarlo para allí
                         //Si viene de algún ayntamiento hay que mandarlo a segcan
