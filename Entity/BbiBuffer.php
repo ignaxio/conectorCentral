@@ -1,20 +1,6 @@
 <?php
 
 /**
- * Operaciones disponibles
- *  1 - Insertar vial en tienda
- *  2 - Insertar chapa en tienda
- *  11 - update vial en tienda
- *  12 - update chapa en tienda
- *  21 - insertar vial en segeco
- *  22 - insertar chapa en segeco
- *  31 - update vial en segeco
- *  32 - updat chapa en segeco
- *  50 - eliminar viales vacios de una caja
- * 100 - insertar inti buffer en tienda
- */
-
-/**
  * Description of BBIBuffer
  *
  * @author ignacio
@@ -28,15 +14,22 @@ class BbiBuffer {
         foreach ($serversNames as $uid => $serverName) {
             $queue = DrupalQueue::get('bufferSalida' . $serverName);
             $remote = new CodeServer($serverName);
+//            if (!$remote->config) {
+//                codeserver_test_create_config();
+//                codeserver_set_message('Recreated initial configuration', array(), 'warning');
+//                $remote = new CodeServer($serverName);
+//            }
             $remote->config->request_timeout = 10;
             $time = microtime(TRUE);
             $max = (int) BbiConector::getMaxTimeExecution(bbiLab_getUserById($uid));
-
-            while (($item = $remote->get_item_from_buffer()) && ((microtime(TRUE) - $time) < $max)) {
+            $contador = 1;
+            while (($item = unserialize($remote->get_item_from_buffer())) && ((microtime(TRUE) - $time) < $max)) {
+                watchdog('prueba conector', $contador);
+                $contador++;
                 if (BbiBuffer::process_item($item, $serverName)) {
-                    $remote->remove_item_from_buffer($item->item_id);
+                    $remote->remove_item_from_buffer(serialize($item->item_id));
                 } else {
-                    $remote->insert_item_error_buffer($item);
+                    $remote->insert_item_error_buffer(serialize($item));
                 }
             }
         }
@@ -47,12 +40,14 @@ class BbiBuffer {
         $data = $item->data;
         $paquete = $data->paquete;
 
+
         //Si no existe el vial se meterá en la cola de errores.
         if ($vial = node_load(bbiLab_getIdNodeByTitle($paquete->getTituloVial()))) {
             //Vamos a ver antes de guardar los datos si el vial que viene tiene fecha de extracción, 
             //si no la tiene es que en segcan no devería existir y hay que crearla nueva, 
             //si tiene fecha de extracción se envia para actualizar datos.
             if (isset($vial->field_vial_fecha_de_extracci_n['und'][0]['value'])) {
+
                 $operacionParaSegcan = 2; //Lo actualizamos
             } else {
                 $operacionParaSegcan = 1; //Lo creamos
@@ -63,6 +58,16 @@ class BbiBuffer {
 
                         break;
                     case 2://actualizar
+                        //Primero vamos a ver si es del mismo ayuntamiento y veterinario.                        
+                        if($vial->field_ayuntamiento['und'][0]['target_id'] != $paquete->getAyuntamiento()) {
+                            watchdog('conector', 'Se ha intentado actualizar el vial ' . $paquete->getTituloVial() . ' pero no coincidían los ayntamientos.');
+                            return false;                            
+                        }
+                        if($vial->field_veterinario['und'][0]['target_id'] != $paquete->getVeterinario()) {
+                            watchdog('conector', 'Se ha intentado actualizar el vial ' . $paquete->getTituloVial() . ' pero no coincidía el veternianrio.');
+                            return false;                            
+                        }
+                            
                         //Antes de guardar el vial vamos a actualizar la caja si viene de un segeco.
                         //Miramos le fecha de vial lleno para saberlo.
                         if ($paquete->getFechaVialLleno()) {
@@ -79,36 +84,35 @@ class BbiBuffer {
                                 //Si no existe se crea la chapa
                                 $resultado = BbiChapa::insert($paquete);
                             }
-                        } 
+                        }
                         //No tiene fecha extraccion... y viene de algún segeco
                         // hay que eliminar la chapa, si la hubiese
                         //Esto quiere decir que se ha editado la solicitud y se ha cambiado de vial.
                         if (!$paquete->getFechaVialLleno() && $serverName != 'conectorSegcan') {
-                            
-                            if($vial = node_load(bbiLab_getIdNodeByTitle($paquete->getTituloVial()))) {
-                                if($idChapa = BbiVial::getChapa($vial->nid)) {
+
+                            if ($vial = node_load(bbiLab_getIdNodeByTitle($paquete->getTituloVial()))) {
+                                if ($idChapa = BbiVial::getChapa($vial->nid)) {
                                     watchdog('prueba vial editado', 'chapa que se va a eliminar ' . $idChapa);
                                     //Si teien chapa la eliminamos
                                     node_delete($idChapa);
-                                    
+
                                     watchdog('prueba vial editado', 'chapa eliminada ' . $idChapa);
                                     //ahora limpiamos el vial
-                                    $vial->field_vial_fecha_de_extracci_n['und'] = NULL;                                    
+                                    $vial->field_vial_fecha_de_extracci_n['und'] = NULL;
                                     $vial->field_vial_estado['und'] = NULL;
                                     $vial->field_vial_localizacion['und'][0]['value'] = 3;
                                     node_save($vial);
-                                    
+
                                     watchdog('prueba vial editado', 'vial se ha quitado la fecha de extracción ' . $vial->title);
                                     //Le restamos 1 a la caja.
                                     $caja = node_load(BbiCaja::getIdCaja($paquete->getTituloVial()));
                                     watchdog('prueba vial editado', 'se le va a restar uno a la caja ' . $caja->field_caja_viales_llenos['und'][0]['value']);
-                                    
-                                    
+
+
                                     $caja->field_caja_viales_llenos['und'][0]['value'] -= 1;
                                     node_save($caja);
-                                    
+
                                     watchdog('prueba vial editado', 'se le ha restado una a la caja ' . $caja->field_caja_viales_llenos['und'][0]['value']);
-                                    
                                 }
                             }
                         }
@@ -134,6 +138,8 @@ class BbiBuffer {
                         break;
                 }
             }
+        } else {
+            watchdog('conector', 'Se ha intentado actualizar el vial ' . $paquete->getTituloVial() . ' pero no existía en la tienda');
         }
 
         return $resultado;
@@ -168,9 +174,9 @@ class BbiBuffer {
             watchdog('pruebatiempo', 'inicio total ' . $time);
             $max = (int) BbiConector::getMaxTimeExecution(bbiLab_getUserById($uid));
             while (($item = BbiBuffer::get_item_from_buffer($queue)) && ((microtime(TRUE) - $time) < $max)) {
-            watchdog('pruebatiempo', 'inicio una prueba ' .  (microtime(TRUE) - $time));
+                watchdog('pruebatiempo', 'inicio una prueba ' . (microtime(TRUE) - $time));
                 if ($item) {
-                    if ($remote->write_element_from_buffer($item)) {
+                    if ($remote->write_element_from_buffer(serialize($item))) {
                         BbiBuffer::remove_item_from_buffer($queue, $item); //Lo ha metido, lo borramos del buffer de salida
                     } else {
                         $item = $item ? $item : 'no hay elemento';

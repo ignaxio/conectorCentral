@@ -1,7 +1,7 @@
 <?php
 
 function bbiLab_drop_server_admin() { 
-    $servidores      = variable_get('codeserver_configs');
+    $servidores      = codeserver_configs();
     $nombreServidores = array();
     foreach ($servidores as $nombre => $datos) {
         $nombreServidores[$nombre] = $nombre;
@@ -30,14 +30,13 @@ function bbiLab_drop_server_admin_validate($form, &$form_state) {
     foreach ($servidoresParaeliminar as $nombreServidor => $servidorParaeliminar) {
         
         if($servidorParaeliminar) {
-            $configs = variable_get('codeserver_configs', array());
+            $configs = codeserver_configs();
             if (isset($configs[$nombreServidor])) {
                 unset($configs[$nombreServidor]);
-                variable_set('codeserver_configs', $configs);
+                codeserver_configs($configs);
                 drupal_flush_all_caches();
                 $servidoresEliminados .= ', ' . $nombreServidor;
                 drupal_set_message(t('Se han eliminado correctamente los servidores ' . $servidoresEliminados));
-                drupal_flush_all_caches();
             }
         }
     }

@@ -3,7 +3,7 @@
 function bbiLab_web_servers_admin() {
     $header = array(t('Server name'), t('Segeco type'), t('Max time execute a queue'), t('Ayto name'), t('Server path'), t('Activo'), t('Edit'));
     $rows = array();
-    $config = variable_get('codeserver_configs');
+    $config = codeserver_configs();
 
     foreach ($config as $nombre => $server) {
         //Creamos un enlace para poder editar el servidor.

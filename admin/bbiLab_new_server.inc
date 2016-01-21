@@ -1,7 +1,7 @@
 <?php
 
 function bbiLab_new_server_admin() { 
-    $servidores = variable_get('codeserver_configs');
+    $servidores = codeserver_configs();
     $tiposDeSegeco =  BbiConector::getTiposDeSegeco();
     $nombreServidores = array();
     foreach ($servidores as $nombre => $datos) {
@@ -49,7 +49,7 @@ function bbiLab_new_server_admin() {
 }
 
 function bbiLab_new_server_admin_validate($form, &$form_state) {
-    $configs                = variable_get('codeserver_configs');
+    $configs                = codeserver_configs();
     $nombreDelAyuntamiento  = $form_state['values']['bbiLab_name'];
     $aytoActivo             = $form_state['values']['bbiLab_activo'];     
     $DireccionDelServidor   = $form_state['values']['bbiLab_serverUrl'];
@@ -70,7 +70,8 @@ function bbiLab_new_server_admin_validate($form, &$form_state) {
     );
     
     // Save the updated configs.    
-    variable_set('codeserver_configs', $configs);
+    codeserver_configs($configs);
+//    variable_set('codeserver_configs', $configs);
     drupal_flush_all_caches();
     drupal_set_message(t('Configuración guardada correctamente para el ' . $nombreDelServidor));    
 }

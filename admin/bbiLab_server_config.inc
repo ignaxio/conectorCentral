@@ -6,7 +6,7 @@ function bbiLab_server_config_admin($form, &$form_state) {
     $funcionesActivas   = array();
     $ipActivas          = array();
     $form               = array();
-    $configuracion      = variable_get('codeserver_configs');
+    $configuracion      =  codeserver_configs();
     $configuracion      = $configuracion[$nombreDelServidor];            
     $enlaceVolver       = l(t('Volver'), 'admin/config/services/web_server_config');
     
@@ -60,7 +60,7 @@ function bbiLab_server_config_admin($form, &$form_state) {
 }
 
 function bbiLab_server_config_admin_validate($form, &$form_state) {
-    $configs                = variable_get('codeserver_configs');
+    $configs                =  codeserver_configs();
     $funcionesNuevas        = array();
     $nombreDelAyuntamiento  = $form_state['values']['bbiLab_name'];
     $aytoActivo             = $form_state['values']['bbiLab_activo']; 
@@ -84,7 +84,8 @@ function bbiLab_server_config_admin_validate($form, &$form_state) {
         'max_time_queue'    => $maxTimeQueue,
     );
     // Save the updated configs.    
-    variable_set('codeserver_configs', $configs);
+    codeserver_configs($configs);
+//    variable_set('codeserver_configs', $configs);
     drupal_set_message(t('Configuración guardada correctamente para el ' . $nombreDelServidor));
     
 }

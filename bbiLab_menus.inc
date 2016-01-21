@@ -65,7 +65,7 @@ function bbiLab_menu() {
         'file' => 'admin/bbiLab_drop_server.inc',
     );
     //Hay que crear tantos servidores como tenga el cliente
-    $codeserver_configs = variable_get('codeserver_configs');
+    $codeserver_configs = codeserver_configs();
     $contador = 4;
     foreach ($codeserver_configs as $nombreServidor => $configuraciones) {
         $items['admin/config/services/web_server_config/' . $nombreServidor] = array(
@@ -86,11 +86,25 @@ function bbiLab_menu() {
 //Funcion para imprimir variables 
 function bbiLab_pruebas() {
     
-    $remote = new CodeServer('conectorLebrija');
-    $remote->config->request_timeout = 10;
-    //Aquí llamamos a función remota, si devuelve false hay que mandarlo otra vez a la cola
-    $usuario = $remote->prueba_usuario();  
-    print_r($usuario);
+    print_r(BbiConector::getServerNameActivos());
+    
+    
+//    
+//    $remote = new CodeServer('conectorLebrija');
+//    $remote->config->request_timeout = 10;
+//
+//    $item = $remote->get_item_from_buffer();
+//    print_r($item);
+//    
+    
+    
+    
+    
+//    $remote = new CodeServer('conectorSegcan');
+//    $remote->config->request_timeout = 10;
+//    //Aquí llamamos a función remota, si devuelve false hay que mandarlo otra vez a la cola
+//    $usuario = $remote->node_load(5376);  
+//    print_r($usuario);
     
 //    $f = date_create($fechaU);
 //    print_r($f);

@@ -176,7 +176,7 @@ function bbiLab_creadorDeViales_CrearViales($num1, $num2, $pre,
         if($i == $num2) $segundoVial = $titulo;
         $values = array(
                 'type'      => 'vial',
-                'uid'       => 1,
+                'uid'       => 321,//Lourdes
                 'status'    => 1,
                 'comment'   => 0,
                 'promote'   => 0,
@@ -203,7 +203,7 @@ function bbiLab_creadorDeViales_CrearViales($num1, $num2, $pre,
 function bbiLab_creadorDeViales_CrearCaja($tituloCaja, $numeroViales) {
     $values = array(
             'type'      => 'caja',
-            'uid'       => 1,
+            'uid'       => 321,//Lourdes
             'status'    => 1,
             'comment'   => 0,
             'promote'   => 0,

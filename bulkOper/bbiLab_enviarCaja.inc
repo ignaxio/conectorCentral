@@ -97,7 +97,7 @@ function bbiLab_enviarCaja_llenarPaquete($vial)  {
     $paquete->setTituloVial($vial->title);
     $paquete->setTipoVial($vial->field_vial_tipo_de_vial['und'][0]['value']);
     $paquete->setAyuntamiento(bbiLab_getUserById($vial->field_ayuntamiento['und'][0]['target_id']));
-    $paquete->setVeterinario($vial->field_veterinario['und'][0]['target_id'] ? bbiLab_getUserById($vial->field_veterinario['und'][0]['target_id']) : false);
+    $paquete->setVeterinario(isset($vial->field_veterinario['und'][0]['target_id']) ? bbiLab_getUserById($vial->field_veterinario['und'][0]['target_id']) : NULL);
     
     
     //Creo un objeto y le meto el array en el atributo vial, 

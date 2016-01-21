@@ -14,7 +14,7 @@ class BbiConector {
     public static function getAyuntamientosActivos() {
         $ayuntamientos = array();
         //Cogemos el configurador...
-        $configs = variable_get('codeserver_configs');
+        $configs = codeserver_configs();
         foreach ($configs as $conectorName => $variablesDelConector) {
             //Si el conector esta activo o no es segcan lo añadimos al array
             if ($variablesDelConector['aytoActivo'] && $conectorName != 'conectorSegcan') {
@@ -31,7 +31,7 @@ class BbiConector {
     public static function getServerNameActivos() {
         $ayuntamientos = array();
         //Cogemos el configurador...
-        $configs = variable_get('codeserver_configs');
+        $configs = codeserver_configs();
         foreach ($configs as $conectorName => $variablesDelConector) {
             //Si el conector esta activo o no es segcan lo añadimos al array
             if ($variablesDelConector['aytoActivo']) {
@@ -47,7 +47,7 @@ class BbiConector {
      */
     public static function getTiposDeSegeco() {
         $tiposDeSegeco = array();
-        $config = variable_get('codeserver_configs');
+        $config = codeserver_configs();
         foreach ($config as $server) {
             $tiposDeSegeco[$server['tipoSegeco']] = $server['tipoSegeco'];
         }
@@ -60,7 +60,7 @@ class BbiConector {
      */
     public static function getTipoDeSegeco($conectorName) {
 
-        $config = variable_get('codeserver_configs');
+        $config = codeserver_configs();
         foreach ($config as $conectorName2 => $server) {
             if ($conectorName2 == $conectorName) {
                 return $server['tipoSegeco'];
@@ -77,7 +77,7 @@ class BbiConector {
      */
     public static function getMaxTimeExecution($ayto) {
         //Cogemos el configurador...
-        $configs = variable_get('codeserver_configs');
+        $configs = codeserver_configs();
         foreach ($configs as $conectorName => $variablesDelConector) {
             //Si el el ayto es el mismo devolvemos el tiempo máximo de ejecución en milisegundos
             if ($variablesDelConector['aytoName'] == $ayto) {

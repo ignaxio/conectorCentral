@@ -33,7 +33,7 @@ function bbiLab_enviarChapa_llenarPaquete($context) {
     $ahoraU = $ahora->format('U');
     
     $paquete = new BbiPaquete();
-    $paquete->setTituloVial(bbiLab_getTitleById($context->field_chapa_vial['und'][0]['target_id']));
+    $paquete->setTituloVial(isset($context->field_chapa_vial['und'][0]['target_id']) ? bbiLab_getTitleById($context->field_chapa_vial['und'][0]['target_id']) : NULL);
     $paquete->setTituloChapa($context->title);
     $paquete->setTipoChapa($context->field_chapa_tipo_chapa['und'][0]['value']);
     $paquete->setAyuntamiento(bbiLab_getUserById($context->field_ayuntamiento['und'][0]['target_id']));

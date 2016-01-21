@@ -94,8 +94,7 @@ function bbiLab_cerrarYRecogerCaja_eliminarVialDeCajaCerrada($vialesVacios,
     //Hacemos la conexión y lo enviamos
     $remote = new CodeServer($conector);
     $remote->config->request_timeout = 10;
-    $respuesta = $remote->conectorSegeco_eliminarVialesVaciosDeUnaCaja(
-            $vialesVacios);   
+    $respuesta = $remote->conectorSegeco_eliminarVialesVaciosDeUnaCaja(serialize($vialesVacios));   
             
             
     //Si todo a ido bien mandamos el mensaje
